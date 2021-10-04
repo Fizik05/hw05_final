@@ -14,19 +14,13 @@ class Group(models.Model):
 
 
 class Post(models.Model):
-    text = models.TextField(
-        "Текст поста",
-        help_text="Введите текст поста"
-    )
-    pub_date = models.DateTimeField(
-        "Дата публикации",
-        auto_now_add=True
-    )
+    text = models.TextField("Текст поста", help_text="Введите текст поста")
+    pub_date = models.DateTimeField("Дата публикации", auto_now_add=True)
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="posts",
-        verbose_name="Автор"
+        verbose_name="Автор",
     )
     group = models.ForeignKey(
         Group,
@@ -35,20 +29,19 @@ class Post(models.Model):
         blank=True,
         null=True,
         verbose_name="Группа",
-        help_text="Выберите группу"
+        help_text="Выберите группу",
     )
     image = models.ImageField(
-        "Картинка",
-        upload_to="posts/",
-        blank=True,
-        null=True
+        "Картинка", upload_to="posts/", blank=True, null=True
     )
 
     def __str__(self):
         return self.text[:15]
 
     class Meta:
-        ordering = ["-pub_date", ]
+        ordering = [
+            "-pub_date",
+        ]
 
 
 class Comment(models.Model):
@@ -67,19 +60,19 @@ class Comment(models.Model):
         help_text="Автор коммента",
     )
     text = models.TextField(
-        verbose_name="Текст комментария",
-        help_text="Текст нового комментария"
+        verbose_name="Текст комментария", help_text="Текст нового комментария"
     )
     pub_date = models.DateTimeField(
-        verbose_name="Дата публикации",
-        auto_now_add=True
+        verbose_name="Дата публикации", auto_now_add=True
     )
 
     class Meta:
-        ordering = ["-pub_date", ]
+        ordering = [
+            "-pub_date",
+        ]
 
     def __str__(self):
-        return(self.text)
+        return self.text
 
 
 class Follow(models.Model):

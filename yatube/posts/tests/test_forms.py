@@ -1,11 +1,12 @@
-from django.test import Client, TestCase, override_settings
-from django.urls import reverse
 import shutil
 import tempfile
+
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from posts.models import Group, Post, User, Comment
+from django.test import Client, TestCase, override_settings
+from django.urls import reverse
 
+from posts.models import Comment, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -42,28 +43,24 @@ class NewPostCreateTests(TestCase):
     def test_create_post(self):
         posts_count = Post.objects.count()
         small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
+            b"\x47\x49\x46\x38\x39\x61\x02\x00"
+            b"\x01\x00\x80\x00\x00\x00\x00\x00"
+            b"\xFF\xFF\xFF\x21\xF9\x04\x00\x00"
+            b"\x00\x00\x00\x2C\x00\x00\x00\x00"
+            b"\x02\x00\x01\x00\x00\x02\x02\x0C"
+            b"\x0A\x00\x3B"
         )
         uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=small_gif,
-            content_type='image/gif'
+            name="small.gif", content=small_gif, content_type="image/gif"
         )
         form_data = {
             "text": "Test_form",
             "group": NewPostCreateTests.group.id,
-            "image": uploaded
+            "image": uploaded,
         }
 
         response = self.authorized_client.post(
-            reverse("posts:new_post"),
-            data=form_data,
-            follow=True
+            reverse("posts:new_post"), data=form_data, follow=True
         )
         user = NewPostCreateTests.user
         self.assertRedirects(
@@ -81,7 +78,7 @@ class NewPostCreateTests(TestCase):
                 author=user,
                 text=form_data["text"],
                 group=form_data["group"],
-                image="posts/small.gif"
+                image="posts/small.gif",
             ).exists()
         )
 
@@ -106,9 +103,7 @@ class NewPostCreateTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertTrue(
             Post.objects.filter(
-                author=user,
-                text=form_data["text"],
-                group=None
+                author=user, text=form_data["text"], group=None
             ).exists()
         )
 
@@ -162,29 +157,21 @@ class NewCommentTests(TestCase):
         response = self.authorized_client.post(
             reverse(
                 "posts:add_comment",
-                kwargs={
-                    "post_id": NewCommentTests.post.id
-                }
+                kwargs={"post_id": NewCommentTests.post.id},
             ),
             data=form_data,
-            follow=True
+            follow=True,
         )
-        self.assertEqual(
-            Comment.objects.count(),
-            count_comments + 1
-        )
+        self.assertEqual(Comment.objects.count(), count_comments + 1)
         self.assertTrue(
             Comment.objects.filter(
-                author=NewCommentTests.user,
-                text=form_data["text"]
+                author=NewCommentTests.user, text=form_data["text"]
             ).exists()
         )
         self.assertRedirects(
             response,
             reverse(
                 "posts:post_detail",
-                kwargs={
-                    "post_id": NewCommentTests.post.id
-                }
-            )
+                kwargs={"post_id": NewCommentTests.post.id},
+            ),
         )

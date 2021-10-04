@@ -2,21 +2,12 @@ from django.shortcuts import render
 
 
 def page_not_found(request, exception):
-    return render(
-        request,
-        "core/404.html",
-        {"path": request.path},
-        status=404
-    )
+    return render(request, "core/404.html", {"path": request.path}, status=404)
 
 
 def csrf_token(request, reason=""):
-    return render(
-        request, "core/403csrf.html"
-    )
+    return render(request, "core/403csrf.html")
 
 
 def server_error(request, reason=""):
-    return render(
-        request, "core/500.html"
-    )
+    return render(request, "core/500.html")
