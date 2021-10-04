@@ -58,7 +58,6 @@ class StaticURLTests(TestCase):
             url_index: self.guest_client,
             url_group_posts: self.guest_client,
             url_new_post: self.authorized_client,
-            url_profile: self.guest_client,
             url_post: self.guest_client,
             url_edit_post: self.authorized_client,
         }

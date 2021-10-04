@@ -9,7 +9,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.core.cache import cache
 
-from posts.models import Group, Post, User
+from posts.models import Group, Post, User, Follow
 
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -41,12 +41,12 @@ class PostTemplatesTests(TestCase):
             "posts:group_posts", kwargs={"slug": PostTemplatesTests.group.slug}
         )
         templates_pages_names = {
-            "posts/index.html": reverse("posts:index"),
-            "posts/group_list.html": url_group,
-            "posts/form.html": reverse("posts:new_post"),
+            reverse("posts:index"): "posts/index.html",
+            url_group: "posts/group_list.html",
+            reverse("posts:new_post"): "posts/form.html"
         }
-        for template, reverse_name in templates_pages_names.items():
-            with self.subTest(reverse_name=reverse_name):
+        for reverse_name, template in templates_pages_names.items():
+            with self.subTest(template=template):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
@@ -152,8 +152,14 @@ class PostPagesTests(TestCase):
 
     def test_profile_context(self):
         """Шаблон profile сформирован с правильным контекстом."""
-        url_profile = reverse("posts:profile", kwargs={"username": self.user})
-        response = self.guest_client.get(url_profile)
+        response = self.guest_client.get(
+            reverse(
+                "posts:profile",
+                kwargs={
+                    "username": self.user
+                }
+            )
+        )
         first_object_author = response.context["author"]
         first_object_posts = response.context["page_obj"][0]
         self.assertEqual(first_object_author, PostPagesTests.user)
@@ -321,3 +327,98 @@ class CacheTests(TestCase):
             content_add,
             content_delete
         )
+
+
+class FollowTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.first_user = User.objects.create_user(
+            "Pasha",
+            "pasha2009@mail.ru",
+            "123456789"
+        )
+        cls.second_user = User.objects.create_user(
+            "Bogdan",
+            "bboybaga13@mail.ru",
+            "12345678"
+        )
+        cls.post = Post.objects.create(
+            text="Post1",
+            author=FollowTests.second_user
+        )
+
+    def setUp(self):
+        self.following = Follow.objects.get_or_create(
+            user=FollowTests.first_user,
+            author=FollowTests.second_user
+        )
+        self.first_authorized_client = Client()
+        self.first_authorized_client.force_login(
+            FollowTests.first_user
+        )
+        cache.clear()
+
+    def test_follow(self):
+        """Проверка, что первый юзер может подписаться на второго юзера."""
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.first_user,
+                author=self.second_user
+            ).exists()
+        )
+        self.assertEqual(
+            Follow.objects.filter(
+                user=self.first_user,
+                author=self.second_user,
+            ).count(),
+            1
+        )
+
+    def test_unfollow(self):
+        """Проверка, что первый юзер модет отписаться от третьего юзера."""
+        Follow.objects.filter(
+            user=self.first_user,
+            author=self.second_user
+        ).delete()
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.first_user,
+                author=self.second_user
+            ).exists()
+        )
+
+    def test_post_for_following(self):
+        """Тест на проверку, что посты отображаются у тех,
+        кто подписан на автора."""
+        response = self.first_authorized_client.get(
+            reverse(
+                "posts:follow_index"
+            )
+        )
+        first_object = response.context["page_obj"][0]
+        post_author = first_object.author
+        self.assertEqual(
+            post_author.username,
+            self.second_user.username
+        )
+        post_text = first_object.text
+        self.assertEqual(
+            post_text,
+            self.post.text
+        )
+
+    def test_not_post_for_following(self):
+        """Тест на проверку, что посты не отображаются у тех,
+        кто не подписан на автора."""
+        Follow.objects.filter(
+            user=self.first_user,
+            author=self.second_user
+        ).delete()
+        response = self.first_authorized_client.get(
+            reverse(
+                "posts:follow_index"
+            )
+        )
+        len_page = len(response.context["page_obj"])
+        self.assertEqual(len_page, 0)

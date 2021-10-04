@@ -8,6 +8,6 @@ class ErrorsTests(TestCase):
         self.guest_client = Client()
 
     def test_404(self):
-        response = self.guest_client.get("/sdfvs/")
+        response = self.guest_client.get("/sdfvscs/")
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertRedirects(response, "core/404.html")
+        self.assertTemplateUsed(response, "core/404.html")

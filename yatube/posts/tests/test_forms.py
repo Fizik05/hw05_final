@@ -61,7 +61,9 @@ class NewPostCreateTests(TestCase):
         }
 
         response = self.authorized_client.post(
-            reverse("posts:new_post"), data=form_data, follow=True
+            reverse("posts:new_post"),
+            data=form_data,
+            follow=True
         )
         user = NewPostCreateTests.user
         self.assertRedirects(
@@ -78,8 +80,9 @@ class NewPostCreateTests(TestCase):
             Post.objects.filter(
                 author=user,
                 text=form_data["text"],
-                group=form_data["group"]
-            )
+                group=form_data["group"],
+                image="posts/small.gif"
+            ).exists()
         )
 
     def test_create_post_not_group(self):
