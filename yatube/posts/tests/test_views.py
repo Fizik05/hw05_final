@@ -39,7 +39,6 @@ class PostTemplatesTests(TestCase):
             "posts:group_posts", kwargs={"slug": PostTemplatesTests.group.slug}
         )
         templates_pages_names = {
-            reverse("posts:index"): "posts/index.html",
             url_group: "posts/group_list.html",
             reverse("posts:new_post"): "posts/form.html",
         }

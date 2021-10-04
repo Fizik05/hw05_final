@@ -3,7 +3,6 @@ from http import HTTPStatus
 from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
-
 from posts.models import Group, Post, User
 
 
@@ -60,6 +59,7 @@ class StaticURLTests(TestCase):
             url_new_post: self.authorized_client,
             url_post: self.guest_client,
             url_edit_post: self.authorized_client,
+            url_profile: self.guest_client
         }
         for url, client in client_pages.items():
             with self.subTest(url=url):
