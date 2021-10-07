@@ -1,6 +1,5 @@
 import shutil
 import tempfile
-from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
@@ -8,6 +7,7 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
+
 from posts.models import Follow, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -257,31 +257,6 @@ class PostIsTests(TestCase):
         self.assertEqual(post_text, PostIsTests.post.text)
 
 
-class AboutTests(TestCase):
-    def setUp(self):
-        self.guest_client = Client()
-
-    def test_about_author(self):
-        url = reverse("about:author")
-        response = self.guest_client.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_about_tech(self):
-        url = reverse("about:tech")
-        response = self.guest_client.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_templates(self):
-        templates = {
-            "about/author.html": reverse("about:author"),
-            "about/tech.html": reverse("about:tech"),
-        }
-        for value, expected in templates.items():
-            with self.subTest(value=expected):
-                response = self.guest_client.get(expected)
-                self.assertTemplateUsed(response, value)
-
-
 class CacheTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -352,7 +327,7 @@ class FollowTests(TestCase):
         )
 
     def test_unfollow(self):
-        """Проверка, что первый юзер модет отписаться от третьего юзера."""
+        """Проверка, что первый юзер модет отписаться от второго юзера."""
         Follow.objects.filter(
             user=self.first_user, author=self.second_user
         ).delete()

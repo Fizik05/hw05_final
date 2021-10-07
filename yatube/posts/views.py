@@ -40,7 +40,11 @@ def profile(request, username):
     posts = author.posts.all()
     if request.user.is_authenticated:
         authorization = True
-        if Follow.objects.filter(user=request.user, author=author).exists():
+        following = Follow.objects.filter(
+            user=request.user,
+            author=author
+        ).exists()
+        if following:
             following = True
         else:
             following = False
@@ -61,7 +65,7 @@ def profile(request, username):
 
 @require_http_methods(["GET", "POST"])
 def post_detail(request, post_id):
-    post = Post.objects.get(id=post_id)
+    post = get_object_or_404(Post, id=post_id)
     user = get_object_or_404(User, username=post.author)
     form = CommentForm(
         request.POST or None,
