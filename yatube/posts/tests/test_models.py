@@ -1,4 +1,3 @@
-from django.db import IntegrityError
 from django.test import Client, TestCase
 
 from ..models import Follow, Group, Post, User
@@ -61,18 +60,3 @@ class UniqueFollowTests(TestCase):
         )
         self.first_authorized_client = Client()
         self.first_authorized_client.force_login(self.first_user)
-
-    def test_only_one_follow(self):
-        """Проверка, что подписываться можно только один раз."""
-        with self.assertRaises(IntegrityError):
-            Follow.objects.create(
-                user=self.first_user,
-                author=self.second_user
-            )
-        self.assertEqual(
-            Follow.objects.filter(
-                user=self.first_user,
-                author=self.second_user,
-            ).count(),
-            1,
-        )
