@@ -1,5 +1,4 @@
-from http import HTTPStatus
-
+from django.db import IntegrityError
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -61,25 +60,21 @@ class UniqueFollowTests(TestCase):
             user=self.first_user,
             author=UniqueFollowTests.second_user
         )
-        self.authorized_user = Client()
-        self.authorized_user.force_login(self.first_user)
+        self.first_authorized_client = Client()
+        self.first_authorized_client.force_login(self.first_user)
 
     def test_only_one_follow(self):
         """Проверка, что подписываться можно только один раз."""
-        response = self.authorized_user.post(
-            reverse(
-                "posts:profile_follow",
-                kwargs={"username": self.second_user}
+        with self.assertRaises(IntegrityError):
+            Follow.objects.create(
+                user=self.first_user,
+                author=self.second_user
             )
-        )
+
         self.assertEqual(
             Follow.objects.filter(
                 user=self.first_user,
                 author=self.second_user,
             ).count(),
             1,
-        )
-        self.assertEqual(
-            response.status_code,
-            HTTPStatus.FOUND
         )

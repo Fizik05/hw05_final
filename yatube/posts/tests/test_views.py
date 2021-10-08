@@ -1,5 +1,6 @@
 import shutil
 import tempfile
+from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
@@ -7,7 +8,6 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
-
 from posts.models import Follow, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -167,7 +167,7 @@ class PostPagesTests(TestCase):
         self.assertEqual(first_object.image, PostPagesTests.post.image)
 
 
-class Paginatortests(TestCase):
+class PaginatorTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -313,6 +313,24 @@ class FollowTests(TestCase):
 
     def test_follow(self):
         """Проверка, что первый юзер может подписаться на второго юзера."""
+        Follow.objects.filter(
+            user=self.first_user, author=self.second_user
+        ).delete()
+        self.assertEqual(
+            Follow.objects.filter(
+                user=self.first_user,
+                author=self.second_user
+            ).count(),
+            0
+        )
+        response = self.first_authorized_client.get(
+            reverse(
+                "posts:profile_follow",
+                kwargs={
+                    "username": self.second_user
+                }
+            )
+        )
         self.assertTrue(
             Follow.objects.filter(
                 user=self.first_user, author=self.second_user
@@ -328,13 +346,30 @@ class FollowTests(TestCase):
 
     def test_unfollow(self):
         """Проверка, что первый юзер модет отписаться от второго юзера."""
+        self.assertEqual(
+            Follow.objects.filter(
+                user=self.first_user,
+                author=self.second_user
+            ).count(),
+            1
+        )
         Follow.objects.filter(
             user=self.first_user, author=self.second_user
         ).delete()
-        self.assertFalse(
+        response = self.first_authorized_client.get(
+            reverse(
+                "posts:profile_unfollow",
+                kwargs={
+                    "username": self.second_user
+                }
+            )
+        )
+        self.assertEqual(
             Follow.objects.filter(
-                user=self.first_user, author=self.second_user
-            ).exists()
+                user=self.first_user,
+                author=self.second_user
+            ).count(),
+            0
         )
 
     def test_post_for_following(self):
@@ -360,3 +395,23 @@ class FollowTests(TestCase):
         )
         len_page = len(response.context["page_obj"])
         self.assertEqual(len_page, 0)
+
+    def test_only_one_follow(self):
+        """Проверка, что подписываться можно только один раз."""
+        response = self.first_authorized_client.get(
+            reverse(
+                "posts:profile_follow",
+                kwargs={"username": self.second_user}
+            )
+        )
+        self.assertEqual(
+            Follow.objects.filter(
+                user=self.first_user,
+                author=self.second_user,
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.FOUND
+        )
