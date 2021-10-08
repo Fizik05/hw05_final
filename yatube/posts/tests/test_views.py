@@ -323,7 +323,7 @@ class FollowTests(TestCase):
             ).count(),
             0
         )
-        response = self.first_authorized_client.get(
+        self.first_authorized_client.get(
             reverse(
                 "posts:profile_follow",
                 kwargs={
@@ -356,7 +356,7 @@ class FollowTests(TestCase):
         Follow.objects.filter(
             user=self.first_user, author=self.second_user
         ).delete()
-        response = self.first_authorized_client.get(
+        self.first_authorized_client.get(
             reverse(
                 "posts:profile_unfollow",
                 kwargs={

@@ -1,6 +1,5 @@
 from django.db import IntegrityError
 from django.test import Client, TestCase
-from django.urls import reverse
 
 from ..models import Follow, Group, Post, User
 
@@ -70,7 +69,6 @@ class UniqueFollowTests(TestCase):
                 user=self.first_user,
                 author=self.second_user
             )
-
         self.assertEqual(
             Follow.objects.filter(
                 user=self.first_user,
